@@ -49,9 +49,15 @@ class Layer(DataNode):
         )
         edge = np.sqrt(10 / np.mean(shape))
         data = np.random.uniform(high=edge, low=-edge, size=shape)
+        self.m = np.zeros(shape)
+        self.v = np.zeros(shape)
+        self.beta_1 = 0.9
+        self.beta_2 = 0.999
+        self.epsilon = 1e-7
+        self.t = 1
         super().__init__(data)
 
-    def update(self, direction, multiplier):
+    def update(self, direction, lr):
         assert isinstance(direction, Constant), (
             "Update direction should be {}, expected Constant, got {!r}".
             format(Constant.__name__,  type(direction).__name__)
@@ -61,11 +67,20 @@ class Layer(DataNode):
             "{}".format(
                 format_shape(direction.data.shape),
                 format_shape(self.data.shape)))
-        assert isinstance(multiplier, (int, float)), (
-            "Update multiplier should be a Python scaler, expected int or float, got {!r}".
-            format(type(multiplier).__name__)
+        assert isinstance(lr, (int, float)), (
+            "Update lr should be a Python scaler, expected int or float, got {!r}".
+            format(type(lr).__name__)
         )
-        self.data += multiplier * direction.data
+
+        self.m = self.beta_1 * self.m + (1 - self.beta_1) * direction.data
+        self.v = self.beta_2 * self.v + (1 - self.beta_2) * (direction.data ** 2)
+
+        m_hat = self.m / (1 - self.beta_1 ** self.t)
+        v_hat = self.v / (1 - self.beta_2 ** self.t)
+
+        self.data -= lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
+
+        self.t += 1
         assert np.all(np.isfinite(self.data)), (
             "Parameter contains NaN or infinity after update, cannot continue")
 
