@@ -48,7 +48,7 @@ class Layer(DataNode):
             "Shape must have two positive integers, expected int, got {!r}".format(shape)
         )
         edge = np.sqrt(10 / np.mean(shape))
-        data = np.random.uniform(high=edge, low=edge, size=shape)
+        data = np.random.uniform(high=edge, low=-edge, size=shape)
         super().__init__(data)
 
     def update(self, direction, multiplier):
@@ -141,8 +141,8 @@ class addBias(layerNode):
     def _backward(gradient, *inputs):
         assert gradient.shape == inputs[0].shape
         return [
-            gredient,
-            np.sum(gredient, axis=0, keepdims=True)
+            gradient,
+            np.sum(gradient, axis=0, keepdims=True)
         ]
 
 class ReLu(layerNode):
@@ -159,7 +159,7 @@ class ReLu(layerNode):
     @staticmethod
     def _backward(gredient:np.ndarray, *inputs:np.ndarray):
         assert gredient.shape==inputs[0].shape
-        return [gredient * np.where(inputs[0] > 0, 1, 0)]
+        return [gredient * np.where(inputs[0] > 0, 1.0, 0.0)]
 
 class meanSquareLoss(layerNode):
     @staticmethod
@@ -167,10 +167,10 @@ class meanSquareLoss(layerNode):
         assert len(inputs) == 2, (
             "Inputs should have two dimensions, expected 2, got {}".format(len(inputs))
         )
-        assert inputs[0].ndim == 1, (
+        assert inputs[0].ndim == 2, (
             "First input should have one dimensions, expected 1, got {}".format(inputs[0].shape)
         )
-        assert inputs[1].ndim == 1, (
+        assert inputs[1].ndim == 2, (
             "First input should have one dimensions, expected 1, got {}".format(inputs[1].shape)
         )
         assert inputs[0].shape == inputs[1].shape, (
@@ -225,7 +225,7 @@ class softmaxLoss(layerNode):
             gradient * (-log_prob) / inputs[0].shape[0]
         ]
 
-def gredient(loss, layers):
+def gradients(loss, layers):
     assert isinstance(loss ,(meanSquareLoss, softmaxLoss)), (
         "Loss should be type of meanSquareLoss or softmaxLoss, got {!r}".format(type(loss).__name__)
     )
@@ -258,3 +258,18 @@ def gredient(loss, layers):
             grads[parent] += parent_grad
 
     return [Constant(grads[layer]) for layer in layers]
+
+def item(node):
+    """
+    Returns the value of a Node as a standard Python number. This only works
+    for nodes with one element (e.g. SquareLoss and SoftmaxLoss, as well as
+    DotProduct with a batch size of 1 element).
+    """
+
+    assert isinstance(node, Node), (
+        "Input must be a node object, instead has type {!r}".format(
+            type(node).__name__))
+    assert node.data.size == 1, (
+        "Node has shape {}, cannot convert to a scalar".format(
+            format_shape(node.data.shape)))
+    return node.data.item()
