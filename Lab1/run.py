@@ -8,10 +8,14 @@ import argparse
 # 输入参数
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_name', type=str, default="abalone.data", help='dataset_name')
+#数据集名称
 parser.add_argument('--target', type=str, default="Rings", help='target')
+#目标变量
 parser.add_argument('--batch_size', type=int, default=50, help='batch_size')
 parser.add_argument('--learning_rate', type=float, default=1e-2, help='lr')
+#学习率
 parser.add_argument('--num_of_features', type=int, default=8, help='num_of_features')
+#自变量特征数量
 parser.add_argument('--beta_1', type=float, default=0.9, help='beta_1')
 parser.add_argument('--beta_2', type=float, default=0.99, help='beta_2')
 args = parser.parse_args()
