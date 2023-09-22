@@ -36,8 +36,7 @@ class RegressionModel(object):
                 loop = False
             if epoch == 2000:
                 loop = False
-            if epoch % 50 == 0:
-                loss_all.append(loss.data)
+            loss_all.append(loss.data)
             epoch += 1
         return loss_all
 
