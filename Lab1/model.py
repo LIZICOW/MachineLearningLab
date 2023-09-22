@@ -1,16 +1,17 @@
+
 import neuralNetwork
-import numpy as np
-from utils import dataSet
 
 
 class RegressionModel(object):
 
-    def __init__(self):
+    def __init__(self,batch_size,num_faetures,learning_rate,beta1,beta2):
 
-        self.batch_size = 50
-        self.w0 = neuralNetwork.Layer(8, 1)
+        self.batch_size = batch_size
+        self.w0 = neuralNetwork.Layer(num_faetures, 1)
+        self.w0.set_beta(beta1,beta2)
         self.b0 = neuralNetwork.Layer(1, 1)
-        self.alpha = 3e-4
+        self.b0.set_beta(beta1, beta2)
+        self.alpha = learning_rate
 
     def run(self, x):
 
@@ -26,17 +27,17 @@ class RegressionModel(object):
         loop = True
         epoch = 0
         while loop:
-            loop = True
             for x, y in dataset.iterate(self.batch_size):
                 loss = self.get_loss(x, y)
                 grad = neuralNetwork.gradients(loss, [self.w0, self.b0])
                 self.w0.update(grad[0], self.alpha)
                 self.b0.update(grad[1], self.alpha)
-            if self.get_loss(neuralNetwork.Constant(dataset.x), neuralNetwork.Constant(dataset.y)).data < 2.705:
+            if self.get_loss(neuralNetwork.Constant(dataset.x), neuralNetwork.Constant(dataset.y)).data < 2.5:
+                loop = False
+            if epoch == 2000:
                 loop = False
             if epoch % 50 == 0:
                 loss_all.append(loss.data)
-                print(epoch, "loss:", loss.data)
             epoch += 1
         return loss_all
 
