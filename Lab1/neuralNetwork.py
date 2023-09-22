@@ -275,12 +275,6 @@ def gradients(loss, layers):
     return [Constant(grads[layer]) for layer in layers]
 
 def item(node):
-    """
-    Returns the value of a Node as a standard Python number. This only works
-    for nodes with one element (e.g. SquareLoss and SoftmaxLoss, as well as
-    DotProduct with a batch size of 1 element).
-    """
-
     assert isinstance(node, Node), (
         "Input must be a node object, instead has type {!r}".format(
             type(node).__name__))
