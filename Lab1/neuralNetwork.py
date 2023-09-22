@@ -79,6 +79,7 @@ class Layer(DataNode):
         v_hat = self.v / (1 - self.beta_2 ** self.t)
 
         self.data -= lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
+        # self.data -= lr * direction.data
 
         self.t += 1
         assert np.all(np.isfinite(self.data)), (
