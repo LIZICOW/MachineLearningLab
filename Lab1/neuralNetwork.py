@@ -1,12 +1,15 @@
 import numpy as np
 
+
 def format_shape(shape):
     return "x".join(map(str, shape)) if shape else "()"
+
 
 class Node:
     def __repr__(self):
         return "<{} shape={} at {}>".format(
             type(self).__name__, format_shape(self.data.shape), hex(id(self)))
+
 
 class DataNode(Node):
     def __init__(self, data):
@@ -20,6 +23,7 @@ class DataNode(Node):
     def _backward(gradient, *inputs):
         return []
 
+
 class Constant(DataNode):
     def __init__(self, data):
         assert isinstance(data, np.ndarray), (
@@ -30,6 +34,7 @@ class Constant(DataNode):
                 data.dtype))
         super().__init__(data)
 
+
 class layerNode(Node):
     def __init__(self, *parents):
         assert all(isinstance(parent, Node) for parent in parents), (
@@ -38,6 +43,7 @@ class layerNode(Node):
         )
         self.parents = parents
         self.data = self._forward(*(parent.data for parent in parents))
+
 
 class Layer(DataNode):
     def __init__(self, *shape):
@@ -51,16 +57,20 @@ class Layer(DataNode):
         data = np.random.uniform(high=edge, low=-edge, size=shape)
         self.m = np.zeros(shape)
         self.v = np.zeros(shape)
-        self.beta_1 = 0.9
-        self.beta_2 = 0.999
+        self.beta_1 = 0
+        self.beta_2 = 0
         self.epsilon = 1e-7
         self.t = 1
         super().__init__(data)
 
+    def set_beta(self, beta_1, beta_2):
+        self.beta_1 = beta_1
+        self.beta_2 = beta_2
+
     def update(self, direction, lr):
         assert isinstance(direction, Constant), (
             "Update direction should be {}, expected Constant, got {!r}".
-            format(Constant.__name__,  type(direction).__name__)
+            format(Constant.__name__, type(direction).__name__)
         )
         assert direction.data.shape == self.data.shape, (
             "Update direction shape {} does not match parameter shape "
@@ -71,7 +81,7 @@ class Layer(DataNode):
             "Update lr should be a Python scaler, expected int or float, got {!r}".
             format(type(lr).__name__)
         )
-
+        # Adam优化
         self.m = self.beta_1 * self.m + (1 - self.beta_1) * direction.data
         self.v = self.beta_2 * self.v + (1 - self.beta_2) * (direction.data ** 2)
 
@@ -79,30 +89,30 @@ class Layer(DataNode):
         v_hat = self.v / (1 - self.beta_2 ** self.t)
 
         self.data -= lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
-        # self.data -= lr * direction.data
 
         self.t += 1
         assert np.all(np.isfinite(self.data)), (
             "Parameter contains NaN or infinity after update, cannot continue")
 
+
 class Linear(layerNode):
     @staticmethod
-    def _forward(*inputs:np.ndarray):
+    def _forward(*inputs: np.ndarray):
         assert len(inputs) == 2, (
             "Inputs should have two dimensions, expected 2, got {}".format(len(inputs))
         )
-        assert inputs[0].ndim==2, (
+        assert inputs[0].ndim == 2, (
             "First input should have two dimensions, expected 2, got {}".format(inputs[0].shape)
         )
-        assert inputs[1].ndim==2, (
+        assert inputs[1].ndim == 2, (
             "First input should have two dimensions, expected 2, got {}".format(inputs[1].shape)
         )
-        assert inputs[0].shape[1]==inputs[1].shape[0], (
+        assert inputs[0].shape[1] == inputs[1].shape[0], (
             "Second dimension of first input should match first dimension of second input, "
             "expected inputs[0].shape[1]==inputs[1].shape[0], got {} and {}".
             format(inputs[0].shape[1], inputs[1].shape[0])
         )
-        return np.dot(inputs[0] ,inputs[1])
+        return np.dot(inputs[0], inputs[1])
 
     @staticmethod
     def _backward(gradient, *inputs):
@@ -134,6 +144,8 @@ class add(layerNode):
     def _backward(gradient, *inputs):
         assert gradient.shape == inputs[0].shape
         return [gradient, gradient]
+
+
 class addBias(layerNode):
     @staticmethod
     def _forward(*inputs):
@@ -161,6 +173,7 @@ class addBias(layerNode):
             np.sum(gradient, axis=0, keepdims=True)
         ]
 
+
 class ReLu(layerNode):
     @staticmethod
     def _forward(*inputs):
@@ -173,9 +186,10 @@ class ReLu(layerNode):
         return np.maximum(0, inputs[0])
 
     @staticmethod
-    def _backward(gredient:np.ndarray, *inputs:np.ndarray):
-        assert gredient.shape==inputs[0].shape
+    def _backward(gredient: np.ndarray, *inputs: np.ndarray):
+        assert gredient.shape == inputs[0].shape
         return [gredient * np.where(inputs[0] > 0, 1.0, 0.0)]
+
 
 class meanSquareLoss(layerNode):
     @staticmethod
@@ -195,6 +209,7 @@ class meanSquareLoss(layerNode):
             format(inputs[0].shape, inputs[1].shape)
         )
         return np.mean(np.square(inputs[0] - inputs[1])) / 2
+
     @staticmethod
     def _backward(gradient, *inputs):
         assert np.asarray(gradient).ndim == 0
@@ -203,9 +218,10 @@ class meanSquareLoss(layerNode):
             gradient * (inputs[1] - inputs[0]) / inputs[0].size
         ]
 
+
 class softmaxLoss(layerNode):
     @staticmethod
-    def _forward(*inputs:np.ndarray):
+    def _forward(*inputs: np.ndarray):
         assert len(inputs) == 2, (
             "Inputs should have two dimensions, expected 2, got {}".format(len(inputs))
         )
@@ -227,9 +243,10 @@ class softmaxLoss(layerNode):
             format(inputs[0].shape, inputs[1].shape)
         )
         predict = inputs[0]
-        log_prob = predict - np.max(predict,axis=1, keepdims=True)
+        log_prob = predict - np.max(predict, axis=1, keepdims=True)
         log_prob = np.log(np.sum(np.exp(log_prob), axis=1, keepdims=True)) - log_prob
         return np.sum(log_prob * inputs[1]) / predict.shape[0]
+
     @staticmethod
     def _backward(gradient, *inputs):
         assert np.asarray(gradient).ndim == 0
@@ -241,8 +258,9 @@ class softmaxLoss(layerNode):
             gradient * (-log_prob) / inputs[0].shape[0]
         ]
 
+
 def gradients(loss, layers):
-    assert isinstance(loss ,(meanSquareLoss, softmaxLoss)), (
+    assert isinstance(loss, (meanSquareLoss, softmaxLoss)), (
         "Loss should be type of meanSquareLoss or softmaxLoss, got {!r}".format(type(loss).__name__)
     )
     assert all(isinstance(layer, Layer) for layer in layers), (
@@ -255,6 +273,7 @@ def gradients(loss, layers):
     loss.used = True
     nodes = set()
     tape = []
+
     def goThroughNode(node):
         if node not in nodes:
             for parent in node.parents:
@@ -274,6 +293,7 @@ def gradients(loss, layers):
             grads[parent] += parent_grad
 
     return [Constant(grads[layer]) for layer in layers]
+
 
 def item(node):
     assert isinstance(node, Node), (
