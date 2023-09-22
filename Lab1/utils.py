@@ -1,25 +1,27 @@
 import numpy as np
-import neuralNetwork 
+import neuralNetwork
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 
-class CustomStandardScaler:
-    def __init__(self):
-        self.mean_ = None
-        self.scale_ = None
+def data_preprocessing(name, target):
+    # 读取数据
+    file_name = 'dataset/' + name
+    data = pd.read_csv(file_name, encoding='utf-8')
+    data = data.replace(['M', 'F', 'I'], [0, 1, 2])
 
-    def fit(self, X):
-        self.mean_ = np.mean(X, axis=0)
-        self.scale_ = np.std(X, axis=0)
+    x = data.drop(columns=[target])
+    y = data[target]
+    y = y.values.reshape(-1, 1)
+    y = y.astype(np.float64)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
-    def transform(self, X):
-        if self.mean_ is None or self.scale_ is None:
-            raise ValueError("Scaler has not been fitted. Call fit() first.")
+    std = StandardScaler()
+    x_train = std.fit_transform(x_train)
+    x_test = std.transform(x_test)
 
-        return (X - self.mean_) / self.scale_
-
-    def fit_transform(self, X):
-        self.fit(X)
-        return self.transform(X)
+    return x_train, x_test, y_train, y_test
 
 
 class dataSet:
@@ -40,4 +42,3 @@ class dataSet:
             x = self.x[start_idx:end_idx]
             y = self.y[start_idx:end_idx]
             yield neuralNetwork.Constant(x), neuralNetwork.Constant(y)
-
