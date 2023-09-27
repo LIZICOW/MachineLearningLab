@@ -3,6 +3,7 @@ import neuralNetwork
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
 
 def data_preprocessing(name, target):
@@ -22,6 +23,26 @@ def data_preprocessing(name, target):
     x_test = std.transform(x_test)
 
     return x_train, x_test, y_train, y_test
+
+
+def show_graph(train_loss, y_predict, y_test):
+    # 绘制折线图
+    plt.plot(range(len(train_loss)), train_loss)
+    plt.xlabel('Index')
+    plt.ylabel('Loss')
+    plt.title('Loss')
+    plt.show()
+
+
+    # 绘制全部图像对比
+    plt.figure(figsize=(8, 6))
+    # 创建两个子图，并共享 x 轴
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(8, 6))
+    ax1.plot(range(len(y_predict)), y_predict, label='predict', color='blue')
+    ax2.plot(range(len(y_test)), y_test[:-4], label='groundtruth', color='red')
+    fig.suptitle('Comparison of predict and truth')
+    # 显示图表
+    plt.show()
 
 
 class dataSet:
