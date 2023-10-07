@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import preprocessing
 import neuralNetwork
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -21,6 +22,8 @@ def data_preprocessing(name, target):
         data = pd.get_dummies(data, columns=['ocean_proximity'])
         #填充total_bedrooms中的缺失值，使用上一行的值进行填充
         data = data.fillna(method='pad')
+        #median_house_value标准化
+        data['median_house_value'] = preprocessing.scale(data['median_house_value'])
 
     x = data.drop(columns=[target])
     y = data[target]
