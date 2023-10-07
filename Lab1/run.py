@@ -1,51 +1,66 @@
-import neuralNetwork
+from utils import data_preprocessing
+from model import RegressionModel
+from utils import dataSet
+import matplotlib.pyplot as plt
+import argparse
 import numpy as np
 
-class RegressionModel(object):
+# 输入参数
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset_name', type=str, default="abalone.data", help='dataset_name')
+#数据集名称
+parser.add_argument('--target', type=str, default="Rings", help='target')
+#目标变量
+parser.add_argument('--batch_size', type=int, default=50, help='batch_size')
+parser.add_argument('--lr', type=float, default=1e-2, help='lr')
+#学习率
+parser.add_argument('--num_of_features', type=int, default=8, help='num_of_features')
+#自变量特征数量
+parser.add_argument('--beta_1', type=float, default=0.9, help='beta_1')
+parser.add_argument('--beta_2', type=float, default=0.99, help='beta_2')
+parser.add_argument('--adam', type=int, default=1, help='Adam')
+parser.add_argument('--episode', type=int, default=50, help='episode')
+args = parser.parse_args()
 
-    def __init__(self, batch_size, num_faetures, learning_rate, beta1, beta2):
+# 构建并运行模型
+x_train, x_test, y_train, y_test = data_preprocessing(args.dataset_name, args.target)
 
-        self.batch_size = batch_size
-        self.w0 = neuralNetwork.Layer(num_faetures, 1)
-        self.w0.set_beta(beta1, beta2)
-        self.b0 = neuralNetwork.Layer(1, 1)
-        self.b0.set_beta(beta1, beta2)
-        self.alpha = learning_rate
+train_dataset = dataSet(x_train, y_train)
+test_dataset = dataSet(x_test, y_test)
+model = RegressionModel(args.batch_size, args.num_of_features, args.lr, args.beta_1, args.beta_2, args.episode,Adam=args.adam)
 
-    def run(self, x):
+train_loss = model.train(train_dataset)
 
-        y1 = neuralNetwork.Linear(x, self.w0)
-        return neuralNetwork.addBias(y1, self.b0)
+if args.adam:
+    # 绘制折线图
+    x = np.arange(len(train_loss))
+    plt.plot(x, train_loss)
+    plt.xlabel('Using Adam')
+    plt.ylabel('Loss')
+    plt.title(f'Test loss = {np.mean(model.predict(test_dataset))}')
+    plt.show()
+else:
+    # 绘制折线图
+    x = np.arange(len(train_loss))
+    plt.plot(x, train_loss)
+    plt.xlabel('Without using Adam')
+    plt.ylabel('Loss')
+    plt.title(f'Test loss = {np.mean(model.predict(test_dataset))}')
+    plt.show()
 
-    def get_loss(self, x, y):
+# 输出最终结果
+test_loss = model.predict(test_dataset)
+print("test_loss:", np.mean(test_loss))
 
-        return neuralNetwork.meanSquareLoss(self.run(x), y)
-
-    def train(self, dataset):
-        loss_all = []
-        loop = True
-        epoch = 0
-        while loop:
-            for x, y in dataset.iterate(self.batch_size):
-                loss = self.get_loss(x, y)
-                grad = neuralNetwork.gradients(loss, [self.w0, self.b0])
-                self.w0.update(grad[0], self.alpha)
-                self.b0.update(grad[1], self.alpha)
-            if self.get_loss(neuralNetwork.Constant(dataset.x), neuralNetwork.Constant(dataset.y)).data < 2.5:
-                loop = False
-            if epoch == 2000:
-                loop = False
-            loss_all.append(loss.data)
-            epoch += 1
-        return loss_all
-
-    def predict(self, dataset):
-        loss_all = []
-        y_all = []
-        for x, y in dataset.iterate(self.batch_size):
-            y_test = self.run(x)
-            y_all.append(y.data.flatten())
-            loss = neuralNetwork.meanSquareLoss(y_test, y)
-            loss_all.append(loss.data)
-        y_all = np.concatenate([arr for arr in y_all])
-        return loss_all, y_all
+y_pre = model.get_predict(test_dataset)
+plt.figure(figsize=(10, 10))
+# plt.plot(y_test)
+# plt.plot(model.get_predict(test_dataset))
+plt.scatter(y_test[:len(y_pre)], y_pre)
+plt.plot([0,25],[0,25])
+plt.ylabel('Predicted')
+plt.xlabel('Measured')
+plt.title('')
+plt.xlim((1, 10))
+plt.ylim((1, 10))
+plt.show()

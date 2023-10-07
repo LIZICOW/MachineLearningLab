@@ -67,7 +67,7 @@ class Layer(DataNode):
         self.beta_1 = beta_1
         self.beta_2 = beta_2
 
-    def update(self, direction, lr):
+    def update(self, direction, lr, Adam = True):
         assert isinstance(direction, Constant), (
             "Update direction should be {}, expected Constant, got {!r}".
             format(Constant.__name__, type(direction).__name__)
@@ -81,16 +81,19 @@ class Layer(DataNode):
             "Update lr should be a Python scaler, expected int or float, got {!r}".
             format(type(lr).__name__)
         )
-        # Adam优化
-        self.m = self.beta_1 * self.m + (1 - self.beta_1) * direction.data
-        self.v = self.beta_2 * self.v + (1 - self.beta_2) * (direction.data ** 2)
+        if Adam:
+            # Adam优化
+            self.m = self.beta_1 * self.m + (1 - self.beta_1) * direction.data
+            self.v = self.beta_2 * self.v + (1 - self.beta_2) * (direction.data ** 2)
 
-        m_hat = self.m / (1 - self.beta_1 ** self.t)
-        v_hat = self.v / (1 - self.beta_2 ** self.t)
+            m_hat = self.m / (1 - self.beta_1 ** self.t)
+            v_hat = self.v / (1 - self.beta_2 ** self.t)
 
-        self.data -= lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
+            self.data -= lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
 
-        self.t += 1
+            self.t += 1
+        else:
+            self.data -= lr * direction.data
         assert np.all(np.isfinite(self.data)), (
             "Parameter contains NaN or infinity after update, cannot continue")
 
