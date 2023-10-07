@@ -17,7 +17,7 @@ def data_preprocessing(name, target):
         data = data.fillna(data.mean())
     if file_name == 'dataset/housing.data':
         #随机取五分之一数据
-        data = data.sample(frac=0.2)
+        data = data.sample(frac=0.5)
         #将ocean_proximity列进行one-hot编码
         data = pd.get_dummies(data, columns=['ocean_proximity'])
         #填充total_bedrooms中的缺失值，使用上一行的值进行填充
