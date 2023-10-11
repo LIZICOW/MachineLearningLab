@@ -35,15 +35,16 @@ if args.adam:
     # 绘制折线图
     x = np.arange(len(train_loss))
     plt.plot(x, train_loss)
-    plt.xlabel('Using Adam')
+    plt.xlabel(f'Using Adam, lr={args.lr}')
     plt.ylabel('Loss')
     plt.title(f'Test loss = {np.mean(model.predict(test_dataset))}')
     plt.show()
+    # plt.savefig(f'./pic/UsingAdamlr={args.lr}.png')
 else:
     # 绘制折线图
     x = np.arange(len(train_loss))
     plt.plot(x, train_loss)
-    plt.xlabel('Without using Adam')
+    plt.xlabel(f'Without using Adam, lr={args.lr}')
     plt.ylabel('Loss')
     plt.title(f'Test loss = {np.mean(model.predict(test_dataset))}')
     plt.show()
@@ -52,18 +53,18 @@ else:
 test_loss = model.predict(test_dataset)
 print("test_loss:", np.mean(test_loss))
 
-y_pre = model.get_predict(test_dataset)
-plt.figure(figsize=(10, 10))
-# plt.plot(y_test)
-# plt.plot(model.get_predict(test_dataset))
-plt.scatter(y_test[:len(y_pre)], y_pre)
-plt.plot([-100,100],[-100,100])
-plt.ylabel('Predicted')
-plt.xlabel('Measured')
-if args.adam:
-    plt.title('Using Adam')
-else:
-    plt.title('Without Using Adam')
-plt.xlim((-3, 3))
-plt.ylim((-3, 3))
-plt.show()
+# y_pre = model.get_predict(test_dataset)
+# plt.figure(figsize=(10, 10))
+# # plt.plot(y_test)
+# # plt.plot(model.get_predict(test_dataset))
+# plt.scatter(y_test[:len(y_pre)], y_pre)
+# plt.plot([-100,100],[-100,100], color='red')
+# plt.ylabel('Predicted')
+# plt.xlabel('Measured')
+# if args.adam:
+#     plt.title('Using Adam')
+# else:
+#     plt.title('Without Using Adam')
+# plt.xlim((-3, 3))
+# plt.ylim((-3, 3))
+# plt.show()
