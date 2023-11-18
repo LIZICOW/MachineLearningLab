@@ -58,8 +58,7 @@ class XGB:
 
                 # min_child_weight在这里起作用，指的是每个叶子节点上的H，即目标函数二阶导的加和
                 # 当目标函数为linear，即1/2*(y-y_hat)**2时，它的二阶导是1，那min_child_weight就等价于min_child_sample
-                # 当目标函数为logistic，其二阶导为sigmoid(y_hat)*(1-sigmoid(y_hat))，可理解为叶子节点的纯度，更详尽的解释可参看：
-                # https://stats.stackexchange.com/questions/317073/explanation-of-min-child-weight-in-xgboost-algorithm#
+                # 当目标函数为logistic，其二阶导为sigmoid(y_hat)*(1-sigmoid(y_hat))，可理解为叶子节点的纯度，
                 if self.min_child_weight:
                     if (H_left < self.min_child_weight) | (H_right < self.min_child_weight):
                         continue
