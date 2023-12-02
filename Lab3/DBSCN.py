@@ -1,11 +1,16 @@
 import numpy as np
-import pandas as pd  
+import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import DBSCAN
 from sklearn import metrics
 import matplotlib.pyplot as plt
-file_name = "OnlineRetail.csv"
+import os
+
+print(os.getcwd())
+
+file_name = "./data/OnlineRetail.csv"
 df = pd.read_csv(file_name, sep=",", encoding="ISO-8859-1", header=0)
+print(df.head(10))
 df = df.dropna()
 df['CustomerID'] = df['CustomerID'].astype(str)
 # data_preparation
@@ -61,7 +66,7 @@ df_scaled = pd.DataFrame(df_scaled)
 df_scaled.columns = ['Amount', 'Frequency', 'Recency']
 X = df_scaled
 
-#可以自行调整
+# 可以自行调整
 db = DBSCAN(eps=0.3, min_samples=15).fit(df_scaled)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
