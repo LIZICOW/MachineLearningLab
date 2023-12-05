@@ -7,45 +7,48 @@ from sklearn.cluster import AgglomerativeClustering
 import argparse
 import os
 
+
 def agglomerative_clustering(X, n_clusters):
     # 初始化每个点为一个聚类
     clusters = [[i] for i in range(X.shape[0])]
-    
+
     # 计算距离矩阵
     dist_matrix = np.zeros((X.shape[0], X.shape[0]))
     for i in range(X.shape[0]):
-        for j in range(i+1, X.shape[0]):
-            dist_matrix[i][j] = dist_matrix[j][i] = np.linalg.norm(X[i]-X[j])
-    
+        for j in range(i + 1, X.shape[0]):
+            dist_matrix[i][j] = dist_matrix[j][i] = np.linalg.norm(X[i] - X[j])
+
     while len(clusters) > n_clusters:
         # 找到最近的两个聚类
         min_dist = np.inf
         c1 = c2 = 0
         for i in range(len(clusters)):
-            for j in range(i+1, len(clusters)):
+            for j in range(i + 1, len(clusters)):
                 dist = np.min(dist_matrix[clusters[i]][:, clusters[j]])
                 if dist < min_dist:
                     min_dist = dist
                     c1, c2 = i, j
-        
+
         # 合并最近的两个聚类
         clusters[c1].extend(clusters[c2])
         clusters.pop(c2)
-        
+
         # 更新距离矩阵
         for i in range(len(clusters[c1])):
-            for j in range(i+1, len(clusters[c1])):
-                dist_matrix[clusters[c1][i]][clusters[c1][j]] = dist_matrix[clusters[c1][j]][clusters[c1][i]] = np.linalg.norm(X[clusters[c1][i]]-X[clusters[c1][j]])
-    
+            for j in range(i + 1, len(clusters[c1])):
+                dist_matrix[clusters[c1][i]][clusters[c1][j]] = dist_matrix[clusters[c1][j]][
+                    clusters[c1][i]] = np.linalg.norm(X[clusters[c1][i]] - X[clusters[c1][j]])
+
     # 生成聚类标签
     labels = np.empty(X.shape[0], dtype=np.intp)
     for i, cluster in enumerate(clusters):
         for ind in cluster:
             labels[ind] = i
-    
+
     return labels
 
-#数据预处理
+
+# 数据预处理
 
 file_name = "./data/OnlineRetail.csv"
 df = pd.read_csv(file_name, sep=",", encoding="ISO-8859-1", header=0)
@@ -103,8 +106,6 @@ df_scaled = pd.DataFrame(df_scaled)
 df_scaled.columns = ['Amount', 'Frequency', 'Recency']
 X = df_scaled
 
-
-
 # 创建解析器
 parser = argparse.ArgumentParser(description='Process cluster number.')
 parser.add_argument('--agg', type=int, help='The number of clusters for Agglomerative Clustering')
@@ -129,6 +130,9 @@ df_scaled.sort_values("Clus_Db")
 score = metrics.silhouette_score(X, df_scaled["Clus_Db"])
 realClusterNum = len(set(labels)) - (1 if -1 in labels else 0)
 clusterNum = len(set(labels))
+print("realClusterNum:", realClusterNum)
+print("clusterNum", clusterNum)
+print("silhouette_score", score)
 
 df_scaled['labels'] = labels
 df_scaled.sort_values(['labels'], inplace=True)

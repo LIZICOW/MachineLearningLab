@@ -6,22 +6,24 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 import os, copy, random
 
+
 class K_means():
     def __init__(self, data, K):
         self.data = np.array(data)
         print(self.data.shape)
         self.X = np.zeros((len(self.data), 1))
         print(self.X.shape)
-        self.X = np.concatenate((self.X, self.data[:,:]), axis=1)
+        self.X = np.concatenate((self.X, self.data[:, :]), axis=1)
         self.K = K
         self.check = 1
-        raw = len(self.X)//K
+        raw = len(self.X) // K
         col = K
         print(raw, col)
         self.echos = min(100, raw)
-        self.randCenterIndex = np.arange(raw*col)
+        self.randCenterIndex = np.arange(raw * col)
         np.random.shuffle(self.randCenterIndex)
-        self.randCenterIndex = self.randCenterIndex.reshape((raw,col))
+        self.randCenterIndex = self.randCenterIndex.reshape((raw, col))
+
     def computeCenter(self):
         dis = 0
         for i in range(len(self.Center)):
@@ -30,7 +32,9 @@ class K_means():
                 self.Center[i] = self.X[random.randint(0, len(self.X)), 1:]
                 continue
             try:
-                dis += np.sum(np.sqrt(np.sum(np.square([self.Center[i] - self.X[j][1:] for j in range(len(self.X)) if self.X[j][0] == i]),axis=1)))
+                dis += np.sum(np.sqrt(
+                    np.sum(np.square([self.Center[i] - self.X[j][1:] for j in range(len(self.X)) if self.X[j][0] == i]),
+                           axis=1)))
             except:
                 print(self.X)
                 print(0, self.Center[i], np.isnan(self.Center[i]))
@@ -41,13 +45,15 @@ class K_means():
                 print()
                 self.check = 0
         return dis
+
     def classify(self):
         for i in range(len(self.X)):
             dis = 0x7fffffff
             for j in range(len(self.Center)):
-                if dis > np.sqrt(np.sum(np.square(self.X[i][1:]-self.Center[j][:]))):
-                    dis = np.sqrt(np.sum(np.square(self.X[i][1:]-self.Center[j][:])))
+                if dis > np.sqrt(np.sum(np.square(self.X[i][1:] - self.Center[j][:]))):
+                    dis = np.sqrt(np.sum(np.square(self.X[i][1:] - self.Center[j][:])))
                     self.X[i][0] = j
+
     def fit(self):
         minMSE = 0x7fffffff
         Center = []
@@ -74,6 +80,7 @@ class K_means():
 
     def labels_(self):
         return self.X[:, 0]
+
 
 print(os.getcwd())
 
@@ -136,7 +143,7 @@ df_scaled.columns = ['Amount', 'Frequency', 'Recency']
 X = df_scaled
 
 # 可以自行调整K的数值
-km = K_means(X, 3)
+km = K_means(X, 5)
 km.fit()
 
 labels = km.labels_()
@@ -150,8 +157,8 @@ clusterNum = len(set(labels))
 print(set(labels))
 print("realClusterNum:", realClusterNum)
 print("clusterNum", clusterNum)
+print("silhouette_score", score)
 print(df_scaled.head(10))
-print(score)
 fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(111, projection='3d')
 

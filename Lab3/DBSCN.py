@@ -67,7 +67,7 @@ df_scaled.columns = ['Amount', 'Frequency', 'Recency']
 X = df_scaled
 
 # 可以自行调整
-db = DBSCAN(eps=0.3, min_samples=15).fit(df_scaled)
+db = DBSCAN(eps=0.1, min_samples=10).fit(df_scaled)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
 labels = db.labels_
@@ -80,8 +80,9 @@ clusterNum = len(set(labels))
 print(set(labels))
 print("realClusterNum:", realClusterNum)
 print("clusterNum", clusterNum)
+print("silhouette_score", score)
 print(df_scaled.head(10))
-print(score)
+
 fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(111, projection='3d')
 
